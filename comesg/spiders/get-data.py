@@ -1,10 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.selector import HtmlXPathSelector
 from scrapy.http import Request
 from scrapy.linkextractors.sgml import SgmlLinkExtractor
+#from scrapy import log
 from comesg.items import ComesgItem
 import logging
 from logging.config import fileConfig
@@ -17,25 +18,39 @@ class RCPSpider(CrawlSpider):
 
     name = 'get-data'
     allowed_domains = ['http://www.realclearpolitics.com']
+    start_urls = [
+		"http://www.realclearpolitics.com/epolls/latest_polls/elections/"
+	]
     rules = ()
 
     def __init__(self, name=None, **kwargs):
         super(RCPSpider, self).__init__(name, **kwargs)
         self.items_buffer = {}
-        self.crawl_url = 'http://www.realclearpolitics.com/epolls/latest_polls/elections/'
+        self.base_url = 'http://www.realclearpolitics.com/epolls/latest_polls/elections/'
         from scrapy.conf import settings
-        settings.set('DOWNLOAD_TIMEOUT', 360, priority='cmdline')
+        settings.overrides['DOWNLOAD_TIMEOUT'] = 360
 
     def parse(self, response):
-        logging.basicConfig(filename='testing.log',level=logging.DEBUG)
-        logging.warning('This is a TEST')
-        logging.info('Start scraping election data....')
-        try:
-            Request(url=self.crawl_url, callback=self.parse_details)
-        except Exception, e:
-            logging.error('Parsing failed for URL {%s}'
-                    % format(response.request.url))
-            raise
+		print "Start scrapping Attractions...."
+		try:
+			hxs = HtmlXPathSelector(response)
+			links = hxs.select("//*[@id='table-1']")
+			
+			if not links:
+				return
+				log.msg("No Data to scrap")
+
+			for link in links:
+				v_url = ''.join( link.extract() )
+								
+				if not v_url:
+					continue
+				else:
+					_url = self.base_url + v_url
+					yield Request( url= _url, callback=self.parse_details )
+		except Exception as e:
+			log.msg("Parsing failed for URL {%s}"%format(response.request.url))
+			raise 
 
     def parse_details(self, response):
         logging.info('Collecting data points....')
@@ -92,4 +107,4 @@ class RCPSpider(CrawlSpider):
 
 
 #line to run the script
-#       scrapy crawl get-data -t csv -o rcp-data-1.csv
+#       scrapy3 crawl get-data -t csv -o rcp-data-1.csv
