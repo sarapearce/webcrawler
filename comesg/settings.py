@@ -12,4 +12,4 @@ SPIDER_MODULES = ['comesg.spiders']
 NEWSPIDER_MODULE = 'comesg.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'comesg (+http://www.yourdomain.com)'
+USER_AGENT = 'comesg (+http://www.sarapearce.net)'
